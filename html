@@ -1,0 +1,943 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forex Points Profit Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:       #0f1117;
+    --surface:  #171b24;
+    --surface2: #222836;</html>
+    --panel:    #070a12;
+
+    --ink:      #f3f4f8;
+    --ink2:     #b6bdcc;
+    --ink3:     #7d8493;
+
+    --accent:   #ff5a2c;
+    --accent2:  #4d8dff;
+    --green:    #32d296;
+
+    --border:   rgba(255,255,255,0.08);
+    --border2:  rgba(255,255,255,0.16);
+
+    --eur:#8b7cff;
+    --gbp:#ff5eb8;
+    --usd:#4d8dff;
+    --aud:#42d97c;
+    --nzd:#b46dff;
+    --cad:#ffad42;
+    --chf:#36d4ff;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(255,90,44,0.12), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(77,141,255,0.10), transparent 36%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 52px 24px 80px;
+  }
+
+  .header {
+    margin-bottom: 48px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .header-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(54px, 10vw, 96px);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .header-desc {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink2);
+    margin-top: 14px;
+    line-height: 1.6;
+    max-width: 420px;
+  }
+
+  .calc-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow:
+      4px 4px 0 rgba(255,255,255,0.04),
+      0 24px 60px rgba(0,0,0,0.35);
+  }
+
+  .calc-top {
+    padding: 28px 28px 24px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media(max-width: 580px) {
+    .calc-top {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .calc-top .field:last-child {
+      grid-column: 1/-1;
+    }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .field label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink3);
+  }
+
+  .symbol-select-wrap {
+    position: relative;
+  }
+
+  .symbol-select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink3);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  select {
+    width: 100%;
+    appearance: none;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 10px 36px 10px 14px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  select option,
+  select optgroup {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,44,0.16);
+  }
+
+  .num-input-wrap {
+    position: relative;
+  }
+
+  .num-input-wrap .unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+
+  input[type=number] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    padding: 8px 52px 8px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  input[type=number]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,44,0.16);
+  }
+
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    opacity: 0.4;
+  }
+
+  .quick-pts {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .quick-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .qbtn {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    color: var(--ink2);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    transition: all 0.15s;
+  }
+
+  .qbtn:hover {
+    background: var(--surface2);
+    color: var(--ink);
+  }
+
+  .qbtn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .result-panel {
+    padding: 36px 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 20px;
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-panel::before {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,90,44,0.22) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .result-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .result-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 12vw, 88px);
+    line-height: 1;
+    color: #fff;
+    letter-spacing: 0.01em;
+    transition: all 0.2s;
+  }
+
+  .result-value.positive {
+    color: #5fddaa;
+  }
+
+  .result-value.negative {
+    color: #ff6b6b;
+  }
+
+  .result-currency {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .result-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .meta-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .dir-toggle {
+    padding: 16px 28px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--panel);
+    display: flex;
+    gap: 0;
+    width: fit-content;
+    border-radius: 0;
+  }
+
+  .dir-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 7px 20px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .dir-btn:first-child {
+    border-radius: 2px 0 0 2px;
+    border-right: none;
+  }
+
+  .dir-btn:last-child {
+    border-radius: 0 2px 2px 0;
+  }
+
+  .dir-btn.active.buy {
+    background: #5fddaa;
+    border-color: #5fddaa;
+    color: #0b1a14;
+  }
+
+  .dir-btn.active.sell {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #1a0b0b;
+  }
+
+  .dir-note {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    margin-left: 16px;
+    align-self: center;
+    letter-spacing: 0.06em;
+  }
+
+  .breakdown {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .bk-item {
+    flex: 1;
+    min-width: 130px;
+    padding: 0 20px 0 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .bk-item:first-child {
+    padding-left: 0;
+  }
+
+  .bk-item:last-child {
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .bk-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--ink3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .bk-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .bk-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+
+  .sym-info {
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .sym-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .sym-info-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink3);
+    letter-spacing: 0.04em;
+  }
+
+  .formula-strip {
+    margin-top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow:
+      2px 2px 0 rgba(255,255,255,0.04),
+      0 18px 45px rgba(0,0,0,0.25);
+  }
+
+  .formula-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .formula-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink2);
+  }
+
+  .formula-text strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .formula-result-box {
+    text-align: right;
+  }
+
+  .formula-result-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .formula-result-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+  }
+
+  .bc-EUR {
+    background: rgba(139,124,255,0.14);
+    color: var(--eur);
+  }
+
+  .bc-GBP {
+    background: rgba(255,94,184,0.14);
+    color: var(--gbp);
+  }
+
+  .bc-USD {
+    background: rgba(77,141,255,0.14);
+    color: var(--usd);
+  }
+
+  .bc-AUD {
+    background: rgba(66,217,124,0.14);
+    color: var(--aud);
+  }
+
+  .bc-NZD {
+    background: rgba(180,109,255,0.14);
+    color: var(--nzd);
+  }
+
+  .bc-CAD {
+    background: rgba(255,173,66,0.14);
+    color: var(--cad);
+  }
+
+  .bc-CHF {
+    background: rgba(54,212,255,0.14);
+    color: var(--chf);
+  }
+
+  @media(max-width:600px) {
+    .result-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .result-right {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .meta-row {
+      min-width: 100px;
+    }
+
+    .bk-item {
+      padding: 8px 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bk-item:last-child {
+      border-bottom: none;
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Forex · Standard Lot Calculator</div>
+    <h1>PROFIT<br><span>CALC</span></h1>
+    <p class="header-desc">
+      Enter any symbol, lot size, and number of points to instantly calculate your USD profit.
+      Uses standard pip valuation — no open/close prices needed.
+    </p>
+  </header>
+
+  <div class="calc-card">
+
+    <div class="calc-top">
+      <div class="field">
+        <label>Symbol</label>
+        <div class="symbol-select-wrap">
+          <select id="symbol"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Lot Size</label>
+        <div class="num-input-wrap">
+          <input type="number" id="lots" value="1" min="0.01" step="0.01">
+          <span class="unit">LOT</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Points</label>
+        <div class="num-input-wrap">
+          <input type="number" id="points" value="10" min="1" step="1">
+          <span class="unit">PTS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-pts">
+      <span class="quick-label">Quick</span>
+      <button class="qbtn" data-pts="5">5</button>
+      <button class="qbtn active" data-pts="10">10</button>
+      <button class="qbtn" data-pts="15">15</button>
+      <button class="qbtn" data-pts="20">20</button>
+      <button class="qbtn" data-pts="30">30</button>
+      <button class="qbtn" data-pts="50">50</button>
+      <button class="qbtn" data-pts="100">100</button>
+      <button class="qbtn" data-pts="200">200</button>
+    </div>
+
+    <div class="result-panel">
+      <div class="result-left">
+        <div class="result-eyebrow">Estimated Profit</div>
+        <div class="result-value positive" id="result-value">$100.00</div>
+        <div class="result-currency" id="result-currency">USD · 1 LOT · 10 PTS</div>
+      </div>
+
+      <div class="result-right">
+        <div class="meta-row">
+          <span class="meta-label">Pip Value</span>
+          <span class="meta-value" id="meta-pipval">$10.00</span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Per Pip</span>
+          <span class="meta-value" id="meta-perpip">$10.00 / pip</span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Pip Size</span>
+          <span class="meta-value" id="meta-pipsize">0.0001</span>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-label">Rate Used</span>
+          <span class="meta-value" id="meta-rate">1.1340</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 0 28px 16px; background: var(--panel); display:flex; align-items:center; gap:0;">
+      <div class="dir-toggle" style="padding:0; border:none; background:none;">
+        <button class="dir-btn active buy" id="btn-buy" onclick="setDir('buy')">▲ Buy</button>
+        <button class="dir-btn sell" id="btn-sell" onclick="setDir('sell')">▼ Sell</button>
+      </div>
+
+      <span class="dir-note" id="dir-note">Long position — profit goes up with price</span>
+    </div>
+
+    <div class="breakdown" id="breakdown"></div>
+
+    <div class="sym-info" id="sym-info"></div>
+
+  </div>
+
+  <div class="formula-strip">
+    <div>
+      <div class="formula-label">Formula</div>
+      <div class="formula-text" id="formula-text">
+        <strong>Profit</strong> = Lot Size × Points × Pip Value per Lot
+      </div>
+    </div>
+
+    <div class="formula-result-box">
+      <div class="formula-result-label">= USD Profit</div>
+      <div class="formula-result-val" id="formula-result">$100.00</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PAIR_RATES = {
+  EURUSD: 1.1340,
+  EURGBP: 0.8510,
+  EURAUD: 1.7750,
+  EURNZD: 1.9120,
+  EURCAD: 1.5700,
+  EURCHF: 0.9280
+};
+
+// Hidden conversion rates used only for USD profit conversion.
+// These are not displayed in the pair dropdown.
+const USD_CONVERSION = {
+  USDCHF: 0.8180,
+  USDCAD: 1.3840,
+  AUDUSD: 0.6390,
+  NZDUSD: 0.5930,
+  GBPUSD: 1.3320,
+  EURUSD: 1.1340
+};
+
+const CURRENCY_ORDER = ['EUR', 'GBP', 'USD', 'AUD', 'NZD', 'CAD', 'CHF'];
+
+const badgeColor = {
+  EUR: 'bc-EUR',
+  GBP: 'bc-GBP',
+  USD: 'bc-USD',
+  AUD: 'bc-AUD',
+  NZD: 'bc-NZD',
+  CAD: 'bc-CAD',
+  CHF: 'bc-CHF'
+};
+
+let direction = 'buy';
+
+function setDir(d) {
+  direction = d;
+
+  document.getElementById('btn-buy').className =
+    'dir-btn buy' + (d === 'buy' ? ' active' : '');
+
+  document.getElementById('btn-sell').className =
+    'dir-btn sell' + (d === 'sell' ? ' active' : '');
+
+  document.getElementById('dir-note').textContent = d === 'buy'
+    ? 'Long position — profit goes up with price'
+    : 'Short position — profit goes down with price';
+
+  render();
+}
+
+function pipValueUSD(sym, rate) {
+  const quote = sym.slice(3);
+  const pip = 0.0001;
+  const piq = 100000 * pip;
+
+  if (quote === 'USD') return piq;
+  if (quote === 'CHF') return piq / USD_CONVERSION.USDCHF;
+  if (quote === 'CAD') return piq / USD_CONVERSION.USDCAD;
+  if (quote === 'AUD') return piq * USD_CONVERSION.AUDUSD;
+  if (quote === 'NZD') return piq * USD_CONVERSION.NZDUSD;
+  if (quote === 'GBP') return piq * USD_CONVERSION.GBPUSD;
+  if (quote === 'EUR') return piq * USD_CONVERSION.EURUSD;
+
+  return piq;
+}
+
+function render() {
+  const sym = document.getElementById('symbol').value;
+  const lots = parseFloat(document.getElementById('lots').value) || 1;
+  const points = parseFloat(document.getElementById('points').value) || 10;
+  const rate = PAIR_RATES[sym];
+
+  const pipUSD = pipValueUSD(sym, rate);
+  const profit = pipUSD * lots * points * (direction === 'sell' ? -1 : 1);
+
+  const base = sym.slice(0, 3);
+  const quote = sym.slice(3);
+  const pipSz = '0.0001';
+
+  const absProfit = Math.abs(profit);
+  const sign = profit < 0 ? '-' : '';
+
+  const rv = document.getElementById('result-value');
+  rv.textContent = `${sign}$${absProfit.toFixed(2)}`;
+  rv.className = 'result-value ' + (profit >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('result-currency').textContent =
+    `USD · ${lots} LOT${lots !== 1 ? 'S' : ''} · ${points} PTS`;
+
+  document.getElementById('meta-pipval').textContent =
+    `$${(pipUSD * lots).toFixed(3)}`;
+
+  document.getElementById('meta-perpip').textContent =
+    `$${pipUSD.toFixed(3)} / pip`;
+
+  document.getElementById('meta-pipsize').textContent = pipSz;
+
+  document.getElementById('meta-rate').textContent = rate.toFixed(4);
+
+  const contractSize = (lots * 100000).toLocaleString();
+
+  document.getElementById('breakdown').innerHTML = `
+    <div class="bk-item">
+      <div class="bk-label">Symbol</div>
+      <div class="bk-value">${sym}</div>
+      <div class="bk-sub">${base} / ${quote}</div>
+    </div>
+
+    <div class="bk-item">
+      <div class="bk-label">Contract Size</div>
+      <div class="bk-value">${contractSize}</div>
+      <div class="bk-sub">units of ${base}</div>
+    </div>
+
+    <div class="bk-item">
+      <div class="bk-label">Pip Value × Lots</div>
+      <div class="bk-value">$${(pipUSD * lots).toFixed(3)}</div>
+      <div class="bk-sub">per 1 pip move</div>
+    </div>
+
+    <div class="bk-item">
+      <div class="bk-label">Points</div>
+      <div class="bk-value">${points}</div>
+      <div class="bk-sub">× pip value</div>
+    </div>
+
+    <div class="bk-item">
+      <div class="bk-label">Total Profit</div>
+      <div class="bk-value" style="color:${profit >= 0 ? 'var(--green)' : 'var(--accent)'}">
+        ${sign}$${absProfit.toFixed(2)}
+      </div>
+      <div class="bk-sub">in USD</div>
+    </div>
+  `;
+
+  document.getElementById('sym-info').innerHTML = `
+    <span class="sym-badge ${badgeColor[base]}">${base}</span>
+    <span class="sym-badge ${badgeColor[quote]}">${quote}</span>
+    <span class="sym-info-text">
+      Pip size: ${pipSz} &nbsp;·&nbsp;
+      Quote currency: ${quote} &nbsp;·&nbsp;
+      ${quote !== 'USD' ? 'Converted via USD rate &nbsp;·&nbsp;' : 'Direct USD valuation &nbsp;·&nbsp;'}
+      Rate: ${rate.toFixed(4)}
+    </span>
+  `;
+
+  document.getElementById('formula-text').innerHTML = `
+    <strong>Profit</strong> = ${lots} lot${lots !== 1 ? 's' : ''} × ${points} pts × $${pipUSD.toFixed(3)}/pip${direction === 'sell' ? ' × (−1 short)' : ''}
+  `;
+
+  document.getElementById('formula-result').textContent =
+    `${sign}$${absProfit.toFixed(2)}`;
+}
+
+const sel = document.getElementById('symbol');
+const symbols = Object.keys(PAIR_RATES);
+const groups = {};
+
+CURRENCY_ORDER.forEach(c => groups[c] = []);
+
+symbols.forEach(s => {
+  const b = s.slice(0, 3);
+  if (groups[b]) groups[b].push(s);
+});
+
+CURRENCY_ORDER.forEach(base => {
+  if (!groups[base].length) return;
+
+  const og = document.createElement('optgroup');
+  og.label = `── ${base} pairs`;
+
+  groups[base].forEach(s => {
+    const o = document.createElement('option');
+    o.value = s;
+    o.textContent = s;
+    og.appendChild(o);
+  });
+
+  sel.appendChild(og);
+});
+
+sel.value = 'EURUSD';
+
+document.querySelectorAll('.qbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.qbtn').forEach(b => b.classList.remove('active'));
+
+    btn.classList.add('active');
+
+    document.getElementById('points').value = btn.dataset.pts;
+
+    render();
+  });
+});
+
+document.getElementById('points').addEventListener('input', function() {
+  const v = +this.value;
+
+  document.querySelectorAll('.qbtn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.pts === v);
+  });
+
+  render();
+});
+
+sel.addEventListener('change', render);
+document.getElementById('lots').addEventListener('input', render);
+
+render();
+</script>
+</body>
+</html>
